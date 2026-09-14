@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fc8ff"/>
+      <stop offset="1" stop-color="#e8f6ff"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff3a0"/>
+      <stop offset="1" stop-color="#ffb347"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="2"/></filter>
+    <style>.hill{stroke:#2f6b2f;stroke-width:2}</style>
+  </defs>
+  <rect width="480" height="360" fill="url(#sky)"/>
+  <circle cx="380" cy="90" r="46" fill="url(#sun)" filter="url(#blur)"/>
+  <path class="hill" d="M0 260 C 90 200, 170 230, 240 250 S 400 220, 480 260 V360 H0Z" fill="#4caf50"/>
+  <path class="hill" d="M0 300 C 120 260, 220 300, 300 290 S 440 280, 480 300 V360 H0Z" fill="#388e3c"/>
+  <g transform="translate(120 250)">
+    <rect x="-30" y="-50" width="60" height="50" fill="#d7a86e" stroke="#7a5230" stroke-width="2"/>
+    <polygon points="-36,-50 0,-84 36,-50" fill="#b23a48" stroke="#7a1f2b" stroke-width="2"/>
+    <rect x="-8" y="-24" width="16" height="24" fill="#5b3a1e"/>
+  </g>
+  <text x="240" y="340" font-family="Helvetica, Arial, sans-serif" font-size="14" text-anchor="middle" fill="#134">SVG Viewer sample — gradients, filters, CSS, text</text>
+</svg>
