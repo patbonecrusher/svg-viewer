@@ -12,7 +12,7 @@
 # Options: debug|release (default release), --universal (arm64 + x86_64)
 #
 # Environment:
-#   TEAM_ID              Apple team (default TEAMID)
+#   TEAM_ID              Apple team (default PERSONALID)
 #   NOTARY_PROFILE       notarytool keychain profile (default notarize-profile), or
 #   APPLE_ID / APPLE_APP_PASSWORD / APPLE_TEAM_ID for notarytool with an app-specific password
 #   PROVISIONING_PROFILE path to the Mac App Store .provisionprofile (default Resources/SVGViewer.provisionprofile)
@@ -44,7 +44,7 @@ done
 
 APP_NAME="SVG Viewer"
 BUNDLE_ID="com.patlaplante.SVGViewer"
-TEAM_ID="${TEAM_ID:-TEAMID}"
+TEAM_ID="${TEAM_ID:-PERSONALID}"
 BUILD_DIR="$PWD/build"
 APP="$BUILD_DIR/$APP_NAME.app"
 PROVISIONING_PROFILE="${PROVISIONING_PROFILE:-Resources/SVGViewer.provisionprofile}"

@@ -1,7 +1,7 @@
 # Releasing SVG Viewer
 
 Two distribution channels, both driven by `build.sh` (locally or from `.github/workflows/build.yml`).
-Team: **TEAMID** (override with `TEAM_ID=…`). Bundle ID: `com.patlaplante.SVGViewer`.
+Team: **PERSONALID** (override with `TEAM_ID=…`). Bundle ID: `com.patlaplante.SVGViewer`.
 
 ## 1. Direct download (Developer ID + notarization)
 
@@ -9,14 +9,14 @@ Same flow as `mdview/bundle.sh`.
 
 ```sh
 # one-time: store notarization credentials (app-specific password from appleid.apple.com)
-xcrun notarytool store-credentials notarize-profile --apple-id you@example.com --team-id TEAMID
+xcrun notarytool store-credentials notarize-profile --apple-id you@example.com --team-id PERSONALID
 
 ./build.sh --universal --sign devid --notarize    # → build/SVGViewer-<version>.zip
 ```
 
-Needs the *Developer ID Application* certificate in the keychain. (Right now this Mac only has an
-*Apple Development* cert; export the Developer ID one from wherever mdview is built, or re-download it
-from developer.apple.com — the private key has to come along, so a `.p12` export is the way.)
+Needs the *Developer ID Application* certificate for team PERSONALID in the keychain (right now this Mac
+only has the *Apple Development* cert — create the Developer ID one at developer.apple.com/account/resources/certificates
+and install it). Note: mdview's CI cert is for a different team (TEAMID); don't reuse that `.p12` here.
 
 ## 2. Mac App Store
 
