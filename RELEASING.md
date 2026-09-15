@@ -86,3 +86,16 @@ entitlements, which is the closest you can get to the App Store build without th
 what App Store Connect actually uses for macOS) and 2560×1600 screenshots. To regenerate screenshots:
 build with `--sign dev`, open a sample, capture the window with `screencapture -o -l <windowID>`, then
 `swiftc -O -o compose Marketing/compose.swift && ./compose capture.png Marketing/screenshot-x.png [dark]`.
+
+## Listing automation
+
+`Tools/asc.py` drives the App Store Connect API (needs `uv`; deps are declared inline):
+
+```sh
+export ASC_KEY_ID=… ASC_ISSUER_ID=…
+Tools/asc.py status          # what's filled in, builds, attached build
+Tools/asc.py all             # metadata + screenshots + price + review contact + latest build
+Tools/asc.py submit          # create the review submission
+```
+
+App Privacy ("no data collected") has no public API and must be set once in the web UI.
