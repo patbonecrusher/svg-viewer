@@ -79,3 +79,10 @@ gh secret set MACOS_CERTIFICATE --repo patbonecrusher/svg-viewer
 
 `./build.sh --sign dev --open` signs with the Apple Development certificate and the real sandbox
 entitlements, which is the closest you can get to the App Store build without the distribution certs.
+
+## Store assets
+
+`Marketing/` holds the App Store icon (`AppIcon-1024.png`, also embedded in the build's `.icns`, which is
+what App Store Connect actually uses for macOS) and 2560×1600 screenshots. To regenerate screenshots:
+build with `--sign dev`, open a sample, capture the window with `screencapture -o -l <windowID>`, then
+`swiftc -O -o compose Marketing/compose.swift && ./compose capture.png Marketing/screenshot-x.png [dark]`.

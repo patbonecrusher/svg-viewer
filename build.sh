@@ -104,12 +104,23 @@ case "$SIGN" in
     IDENTITY="$(require_identity 'Developer ID Application')"
     ;;
   appstore)
-    IDENTITY="$(find_identity 'Apple Distribution' "$TEAM_ID")"
-    [[ -n $IDENTITY ]] || IDENTITY="$(require_identity '3rd Party Mac Developer Application')"
     SIGN_FLAGS=(--force --timestamp)                       # App Store: sandbox, no hardened runtime needed
     if [[ ! -f $PROVISIONING_PROFILE ]]; then
       echo "error: Mac App Store provisioning profile not found at $PROVISIONING_PROFILE" >&2
       echo "       Create one (Profiles → Mac App Store Connect, bundle ID $BUNDLE_ID) and download it there." >&2
+      exit 1
+    fi
+    # App Store Connect rejects the upload unless the app is signed with the exact certificate
+    # embedded in the profile, so pick that one (by SHA-1) rather than guessing by name.
+    IDENTITY=""
+    for sha in $(security cms -D -i "$PROVISIONING_PROFILE" | python3 -c '
+import plistlib, sys, hashlib
+for c in plistlib.loads(sys.stdin.buffer.read())["DeveloperCertificates"]: print(hashlib.sha1(c).hexdigest().upper())'); do
+      if security find-identity -v -p codesigning | grep -q "$sha"; then IDENTITY="$sha"; break; fi
+    done
+    if [[ -z $IDENTITY ]]; then
+      echo "error: none of the certificates in $PROVISIONING_PROFILE is in the keychain (with its private key)." >&2
+      echo "       Regenerate the profile with a certificate from: security find-identity -v -p codesigning" >&2
       exit 1
     fi
     cp "$PROVISIONING_PROFILE" "$APP/Contents/embedded.provisionprofile"
