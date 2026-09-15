@@ -46,11 +46,12 @@ LISTING = {
     ),
     "promotionalText": "View SVG files the way they're meant to look — in a lightweight, native Mac app.",
     "keywords": "svg,vector,viewer,graphics,image,preview,design,export,png,illustration",
-    "supportUrl": "https://github.com/patbonecrusher/svg-viewer",
-    "marketingUrl": "https://github.com/patbonecrusher/svg-viewer",
+    "supportUrl": "https://github.com/patbonecrusher/svg-viewer/issues",
+    "marketingUrl": "https://patbonecrusher.github.io/svg-viewer/",
     "whatsNew": None,          # not allowed on the first version
 }
 SUBTITLE = "Native SVG viewer"
+PRIVACY_URL = "https://patbonecrusher.github.io/svg-viewer/privacy.html"
 PRIMARY_CATEGORY = "GRAPHICS_AND_DESIGN"
 SECONDARY_CATEGORY = "DEVELOPER_TOOLS"
 COPYRIGHT = "2026 Patrick Laplante"
@@ -198,7 +199,8 @@ def cmd_metadata(asc):
                  ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")), infos[0])
     for il in asc.get(f"/appInfos/{info['id']}/appInfoLocalizations")["data"]:
         if il["attributes"]["locale"] == "en-US":
-            asc.patch(f"/appInfoLocalizations/{il['id']}", "appInfoLocalizations", il["id"], {"subtitle": SUBTITLE})
+            asc.patch(f"/appInfoLocalizations/{il['id']}", "appInfoLocalizations", il["id"],
+                      {"subtitle": SUBTITLE, "privacyPolicyUrl": PRIVACY_URL})
     asc.patch(f"/appInfos/{info['id']}", "appInfos", info["id"], relationships={
         "primaryCategory": ref("appCategories", PRIMARY_CATEGORY),
         "secondaryCategory": ref("appCategories", SECONDARY_CATEGORY),
