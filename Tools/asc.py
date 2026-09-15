@@ -192,6 +192,8 @@ def cmd_metadata(asc):
     asc.patch(f"/appStoreVersionLocalizations/{loc['id']}", "appStoreVersionLocalizations", loc["id"], attrs)
     asc.patch(f"/appStoreVersions/{v['id']}", "appStoreVersions", v["id"], {"copyright": COPYRIGHT})
     print("✓ description, keywords, URLs, copyright")
+    asc.patch(f"/apps/{app['id']}", "apps", app["id"], {"contentRightsDeclaration": "DOES_NOT_USE_THIRD_PARTY_CONTENT"})
+    print("✓ content rights: no third-party content")
 
     # App-level info: subtitle + categories live on the appInfo, not the version.
     infos = asc.get(f"/apps/{app['id']}/appInfos")["data"]
@@ -347,7 +349,8 @@ def cmd_review_info(asc):
 def cmd_submit(asc):
     app = find_app(asc)
     v = editable_version(asc, app["id"])
-    sub = asc.post("/reviewSubmissions", "reviewSubmissions", {"platform": "MAC_OS"}, {"app": ref("apps", app["id"])})
+    open_subs = asc.get("/reviewSubmissions", **{"filter[app]": app["id"], "filter[state]": "READY_FOR_REVIEW,UNRESOLVED_ISSUES"})["data"]
+    sub = open_subs[0] if open_subs else asc.post("/reviewSubmissions", "reviewSubmissions", {"platform": "MAC_OS"}, {"app": ref("apps", app["id"])})
     asc.post("/reviewSubmissionItems", "reviewSubmissionItems", relationships={
         "reviewSubmission": ref("reviewSubmissions", sub["id"]),
         "appStoreVersion": ref("appStoreVersions", v["id"]),
