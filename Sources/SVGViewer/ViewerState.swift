@@ -25,6 +25,8 @@ final class ViewerState: ObservableObject {
         self.source = source
         self.fileURL = fileURL
         self.fitMode = UserDefaults.standard.string(forKey: Prefs.openZoom) != OpenZoom.actual.rawValue
+        // Launch argument `-showSource YES` opens the inspector (handy for testing and screenshots).
+        self.showSource = UserDefaults.standard.bool(forKey: "showSource")
         updateFileSize()
         if let url = fileURL {
             watcher = FileWatcher(url: url) { [weak self] in
