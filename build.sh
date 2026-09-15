@@ -131,6 +131,10 @@ for c in plistlib.loads(sys.stdin.buffer.read())["DeveloperCertificates"]: print
   *) echo "unknown --sign mode: $SIGN (none|dev|devid|appstore)" >&2; exit 1 ;;
 esac
 
+# Downloaded files (e.g. the provisioning profile) carry com.apple.quarantine; App Store Connect rejects
+# packages containing it (ITMS-91109). Strip all extended attributes before signing.
+xattr -cr "$APP"
+
 echo "==> Signing ($SIGN: $IDENTITY)…"
 codesign "${SIGN_FLAGS[@]}" --sign "$IDENTITY" --entitlements "$ENTITLEMENTS" --identifier "$BUNDLE_ID" "$APP"
 codesign --verify --strict --verbose=2 "$APP"
