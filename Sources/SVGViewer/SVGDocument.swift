@@ -24,10 +24,30 @@ struct SVGDocument: FileDocument {
     /// Turns raw file bytes (optionally gzip-compressed) into SVG source text.
     static func decode(_ raw: Data) throws -> String {
         let data = try gunzipIfNeeded(raw)
+        let bytes = [UInt8](data.prefix(4))
+        if bytes.starts(with: [0xFF, 0xFE]) || bytes.starts(with: [0xFE, 0xFF]),
+           let s = String(data: data, encoding: .utf16) {
+            return s
+        }
         if let s = String(data: data, encoding: .utf8) { return s }
-        if let s = String(data: data, encoding: .utf16) { return s }
+        // Not UTF-8: honor the XML declaration (e.g. ISO-8859-1, windows-1251) before guessing.
+        if let name = declaredEncoding(in: data) {
+            let cf = CFStringConvertIANACharSetNameToEncoding(name as CFString)
+            if cf != kCFStringEncodingInvalidId {
+                let enc = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(cf))
+                if let s = String(data: data, encoding: enc) { return s }
+            }
+        }
         if let s = String(data: data, encoding: .isoLatin1) { return s }
         throw CocoaError(.fileReadInapplicableStringEncoding)
+    }
+
+    private static func declaredEncoding(in data: Data) -> String? {
+        let head = String(decoding: data.prefix(200), as: UTF8.self)
+        guard let range = head.range(of: #"encoding\s*=\s*["']([A-Za-z0-9._-]+)["']"#, options: .regularExpression) else { return nil }
+        let decl = head[range]
+        guard let q = decl.firstIndex(where: { $0 == "\"" || $0 == "'" }) else { return nil }
+        return String(decl[decl.index(after: q)...].dropLast())
     }
 
     private static func gunzipIfNeeded(_ d: Data) throws -> Data {

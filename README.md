@@ -49,3 +49,18 @@ Signed / notarized / App Store builds: see [RELEASING.md](RELEASING.md).
 - PNG export and Copy Image use the system renderer (CoreSVG), which supports fewer SVG features
   than WebKit (notably filters). On-screen display is always WebKit.
 - Scripts inside SVG files are not executed.
+
+## Testing
+
+```sh
+Tools/fetch-testfiles.sh     # real-world SVGs from Illustrator, Pixelmator, Sketch, Inkscape, Affinity…
+Tools/fetch-stress-files.sh  # W3C / resvg edge cases + generated hostile, malformed, sizing and perf files
+```
+
+Both populate the git-ignored `TestFiles/`. Open them in the app (tip: `open -a "SVG Viewer" file.svg
+--args -ApplePersistenceIgnoreState YES` skips window restoration when testing many files).
+
+Content safety: the page hosting the SVG carries a strict Content-Security-Policy (no network, no scripts,
+no `on*` handlers, no `javascript:` URLs; `data:` URIs allowed), the SVG lives in a shadow root so its
+stylesheets cannot affect the viewer, and navigation away from the viewer page is blocked (links open in
+the default browser).

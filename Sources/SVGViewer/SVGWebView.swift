@@ -29,7 +29,8 @@ struct SVGWebView: NSViewRepresentable {
                 NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
             }
         }
-        webView.loadHTMLString(ViewerPage.html, baseURL: nil)
+        webView.navigationDelegate = context.coordinator
+        webView.loadHTMLString(ViewerPage.html(nonce: context.coordinator.nonce), baseURL: nil)
 
         context.coordinator.webView = webView
         return webView
@@ -47,9 +48,11 @@ struct SVGWebView: NSViewRepresentable {
     // MARK: Coordinator
 
     @MainActor
-    final class Coordinator: NSObject, WKScriptMessageHandler {
+    final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
         let state: ViewerState
         weak var webView: WKWebView?
+        /// Per-instance CSP nonce so SVG content can never smuggle in a script that runs.
+        let nonce = UUID().uuidString
         private var ready = false
         private var lastReportedZoom: Double?
         private var backgroundCSS = ""
@@ -102,6 +105,31 @@ struct SVGWebView: NSViewRepresentable {
 
         private func sendSource(_ source: String) {
             evaluate("viewer.setSVG(\(jsLiteral(source)))")
+        }
+
+        // The only navigation allowed is our own about:blank page. Links inside the SVG open in the browser.
+        func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
+                     decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            let url = action.request.url
+            if action.navigationType == .other, url?.absoluteString == "about:blank" {
+                decisionHandler(.allow)
+                return
+            }
+            if action.navigationType == .linkActivated, let url, ["http", "https", "mailto"].contains(url.scheme ?? "") {
+                NSWorkspace.shared.open(url)
+            }
+            decisionHandler(.cancel)
+        }
+
+        func webView(_ webView: WKWebView, decidePolicyFor response: WKNavigationResponse,
+                     decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+            decisionHandler(response.isForMainFrame ? .allow : .cancel)
+        }
+
+        func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            state.errorMessage = "The rendering process stopped unexpectedly (the file may be too complex). Reload to try again."
+            ready = false
+            webView.loadHTMLString(ViewerPage.html(nonce: nonce), baseURL: nil)
         }
 
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -208,32 +236,43 @@ final class ViewerWebView: WKWebView {
 }
 
 enum ViewerPage {
-    static let html = #"""
+    static func html(nonce: String) -> String {
+        template.replacingOccurrences(of: "__NONCE__", with: nonce)
+    }
+
+    // CSP: no network, no scripts other than ours (blocks <script>, on* handlers and javascript: URLs
+    // inside SVG content), inline styles allowed, data: URIs allowed for embedded bitmaps and fonts.
+    private static let template = #"""
     <!doctype html>
     <html>
     <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none'; script-src 'nonce-__NONCE__'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <style>
       html, body { margin: 0; height: 100%; overflow: hidden;
                    -webkit-user-select: none; user-select: none; }
       #stage { position: absolute; inset: 0; overflow: auto; }
       #inner { display: flex; min-width: 100%; min-height: 100%; box-sizing: border-box; padding: 24px; }
-      #holder { margin: auto; flex: none; line-height: 0; }
-      #holder > svg { display: block; }
+      #holder { margin: auto; flex: none; line-height: 0; display: block !important; }
     </style>
     </head>
     <body>
     <div id="stage"><div id="inner"><div id="holder"></div></div></div>
-    <script>
+    <script nonce="__NONCE__">
     (function () {
       const stage = document.getElementById('stage');
       const holder = document.getElementById('holder');
+      // The SVG lives in a shadow root so its <style> rules cannot restyle this page.
+      const shadow = holder.attachShadow({ mode: 'open' });
+      window.onerror = (msg, src, line) => { post({ type: 'error', message: String(msg) + ' (line ' + line + ')' }); };
       const PAD = 24, MIN = 0.02, MAX = 64;
       let natural = { w: 300, h: 150 }, zoom = 1, fitMode = true, svg = null;
 
       function post(m) { try { window.webkit.messageHandlers.viewer.postMessage(m); } catch (e) {} }
 
-      const UNITS = { '': 1, px: 1, pt: 96 / 72, pc: 16, mm: 96 / 25.4, cm: 96 / 2.54, in: 96 };
+      const UNITS = { '': 1, px: 1, pt: 96 / 72, pc: 16, mm: 96 / 25.4, cm: 96 / 2.54, in: 96,
+                      em: 16, rem: 16, ex: 8, ch: 8, q: 96 / 25.4 / 4 };
       function parseLen(v) {
         if (!v) return null;
         const m = /^\s*([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)\s*([a-z%]*)\s*$/i.exec(v);
@@ -270,8 +309,10 @@ enum ViewerPage {
       function apply() {
         if (!svg) return;
         const W = natural.w * zoom, H = natural.h * zoom;
-        svg.style.width = W + 'px';
-        svg.style.height = H + 'px';
+        // !important so a stylesheet inside the SVG cannot override the viewer's sizing.
+        svg.style.setProperty('width', W + 'px', 'important');
+        svg.style.setProperty('height', H + 'px', 'important');
+        svg.style.setProperty('display', 'block', 'important');
         holder.style.width = W + 'px';
         holder.style.height = H + 'px';
       }
@@ -310,12 +351,12 @@ enum ViewerPage {
 
       window.viewer = {
         setSVG(src) {
-          holder.textContent = '';
+          shadow.textContent = '';
           svg = null;
           const r = parse(src);
           if (r.error) { post({ type: 'error', message: r.error }); return; }
           svg = r.node;
-          holder.appendChild(svg);
+          shadow.appendChild(svg);
           natural = measure(svg);
           if (!(svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width > 0)) {
             // Without a viewBox, CSS sizing would not scale the content.
