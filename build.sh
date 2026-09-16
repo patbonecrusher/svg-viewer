@@ -14,7 +14,8 @@
 # Environment:
 #   TEAM_ID              Apple team (default TEAMID)
 #   NOTARY_PROFILE       notarytool keychain profile (default notarize-profile), or
-#   APPLE_ID / APPLE_APP_PASSWORD / APPLE_TEAM_ID for notarytool with an app-specific password
+#   APPLE_ID / APPLE_APP_PASSWORD / APPLE_TEAM_ID for notarytool with an app-specific password, or
+#   ASC_KEY_ID / ASC_ISSUER_ID to notarize with the App Store Connect API key
 #   PROVISIONING_PROFILE path to the Mac App Store .provisionprofile (default Resources/SVGViewer.provisionprofile)
 #   ASC_KEY_ID / ASC_ISSUER_ID   App Store Connect API key for --upload (the .p8 must be in ~/.appstoreconnect/private_keys)
 set -euo pipefail
@@ -147,7 +148,10 @@ if [[ $NOTARIZE == 1 ]]; then
   ZIP="$BUILD_DIR/SVGViewer-$VERSION.zip"
   echo "==> Notarizing…"
   ditto -c -k --keepParent "$APP" "$ZIP"
-  if [[ -n ${APPLE_ID:-} ]]; then
+  if [[ -n ${ASC_KEY_ID:-} ]]; then
+    xcrun notarytool submit "$ZIP" --key "$HOME/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8" \
+      --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait
+  elif [[ -n ${APPLE_ID:-} ]]; then
     xcrun notarytool submit "$ZIP" --apple-id "$APPLE_ID" --team-id "${APPLE_TEAM_ID:-$TEAM_ID}" \
       --password "$APPLE_APP_PASSWORD" --wait
   else

@@ -4,6 +4,14 @@ A native macOS viewer for `.svg` / `.svgz` files, written in Swift (SwiftUI + Ap
 Rendering uses WebKit for full SVG fidelity (CSS, filters, gradients, fonts); everything
 around it — menus, toolbar, Settings, document handling — is standard macOS.
 
+## Install
+
+```sh
+brew install --cask patbonecrusher/tap/svg-viewer
+```
+
+or get it from the Mac App Store / the [releases page](https://github.com/patbonecrusher/svg-viewer/releases).
+
 ## Build
 
 ```sh

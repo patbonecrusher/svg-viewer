@@ -17,6 +17,9 @@ xcrun notarytool store-credentials notarize-profile --apple-id you@example.com -
 Needs the *Developer ID Application* certificate in the keychain (create it at
 developer.apple.com/account/resources/certificates and install it, or export the `.p12` mdview's CI uses).
 
+`Tools/release.sh` runs that build, creates the GitHub release for the tag, and updates the Homebrew cask
+in `patbonecrusher/homebrew-tap` (`Casks/svg-viewer.rb`) — install with `brew install --cask patbonecrusher/tap/svg-viewer`.
+
 ## 2. Mac App Store
 
 ### One-time setup (developer.apple.com / App Store Connect)
