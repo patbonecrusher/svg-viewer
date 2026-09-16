@@ -337,7 +337,9 @@ def cmd_review_info(asc):
             break
     if not contact:
         die("no existing App Review contact info found; set REVIEW_PHONE and I'll use it")
-    attrs = {**contact, "demoAccountRequired": False, "notes": "SVG viewer. Open any .svg file (sample: any SVG from the web) to test."}
+    notes = (ROOT / "Marketing/review-notes.md").read_text() if (ROOT / "Marketing/review-notes.md").exists() \
+        else "SVG viewer. Open any .svg file to test."
+    attrs = {**contact, "demoAccountRequired": False, "notes": notes[:4000]}
     existing = asc.get(f"/appStoreVersions/{v['id']}/appStoreReviewDetail")["data"]
     if existing:
         asc.patch(f"/appStoreReviewDetails/{existing['id']}", "appStoreReviewDetails", existing["id"], attrs)
