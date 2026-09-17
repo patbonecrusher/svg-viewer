@@ -5,7 +5,7 @@
 #   Tools/release.sh --dry-run  build + notarize only
 #
 # Needs: Developer ID Application cert in the keychain, notarization credentials (see build.sh),
-#        `gh` logged in, and the tap checked out at $TAP_DIR (default ../mdview/homebrew-tap).
+#        `gh` logged in, and the Homebrew tap checked out at $TAP_DIR.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -13,7 +13,8 @@ DRY=0; [[ ${1:-} == --dry-run ]] && DRY=1
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)"
 TAG="v$VERSION"
 ZIP="build/SVGViewer-$VERSION.zip"
-TAP_DIR="${TAP_DIR:-../mdview/homebrew-tap}"
+for f in "$HOME/.config/mac-app-kit/defaults.env" ./.release.env; do [[ -f $f ]] && source "$f"; done
+: "${TAP_DIR:?set TAP_DIR (path to the homebrew tap checkout) in the environment or .release.env}"
 CASK="$TAP_DIR/Casks/svg-viewer.rb"
 
 if [[ -n "$(git status --porcelain)" ]]; then echo "error: working tree not clean" >&2; exit 1; fi

@@ -12,7 +12,7 @@
 # Options: debug|release (default release), --universal (arm64 + x86_64)
 #
 # Environment:
-#   TEAM_ID              Apple team (default TEAMID)
+#   TEAM_ID              Apple team id (or put it in .release.env / ~/.config/mac-app-kit/defaults.env, both git-ignored)
 #   NOTARY_PROFILE       notarytool keychain profile (default notarize-profile), or
 #   APPLE_ID / APPLE_APP_PASSWORD / APPLE_TEAM_ID for notarytool with an app-specific password, or
 #   ASC_KEY_ID / ASC_ISSUER_ID to notarize with the App Store Connect API key
@@ -45,7 +45,9 @@ done
 
 APP_NAME="SVG Viewer"
 BUNDLE_ID="com.patlaplante.SVGViewer"
-TEAM_ID="${TEAM_ID:-TEAMID}"
+# Personal defaults live outside the repo: ~/.config/mac-app-kit/defaults.env, then ./.release.env (both optional).
+for f in "$HOME/.config/mac-app-kit/defaults.env" ./.release.env; do [[ -f $f ]] && source "$f"; done
+: "${TEAM_ID:?set TEAM_ID (Apple team id) in the environment or .release.env}"
 BUILD_DIR="$PWD/build"
 APP="$BUILD_DIR/$APP_NAME.app"
 PROVISIONING_PROFILE="${PROVISIONING_PROFILE:-Resources/SVGViewer.provisionprofile}"

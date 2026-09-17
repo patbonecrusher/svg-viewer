@@ -1,7 +1,8 @@
 # Releasing SVG Viewer
 
 Two distribution channels, both driven by `build.sh` (locally or from `.github/workflows/build.yml`).
-Team: **TEAMID** (override with `TEAM_ID=…`). Bundle ID: `com.patlaplante.SVGViewer`.
+Bundle ID: `com.patlaplante.SVGViewer`. Personal settings (`TEAM_ID`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `TAP_DIR`) are read
+from `~/.config/mac-app-kit/defaults.env` or `./.release.env` — both git-ignored, never committed.
 
 ## 1. Direct download (Developer ID + notarization)
 
@@ -9,7 +10,7 @@ Same flow as `mdview/bundle.sh`.
 
 ```sh
 # one-time: store notarization credentials (app-specific password from appleid.apple.com)
-xcrun notarytool store-credentials notarize-profile --apple-id you@example.com --team-id TEAMID
+xcrun notarytool store-credentials notarize-profile --apple-id you@example.com --team-id "$TEAM_ID"
 
 ./build.sh --universal --sign devid --notarize    # → build/SVGViewer-<version>.zip
 ```
