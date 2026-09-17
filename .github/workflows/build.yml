@@ -1,8 +1,9 @@
 name: Build
 
+# Manual only: releases are normally cut locally with Tools/release.sh (Developer ID) and
+# build.sh --sign appstore --pkg --upload (App Store). To run this in CI, add the secrets listed in
+# RELEASING.md, then use "Run workflow" (or re-enable `push: tags: ['v*']`).
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       appstore:
@@ -44,13 +45,13 @@ jobs:
           name: SVGViewer-macos
           path: build/SVGViewer-*.zip
       - name: GitHub release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v')   # only when dispatched from a tag ref
         uses: softprops/action-gh-release@v2
         with:
           files: build/SVGViewer-*.zip
           generate_release_notes: true
       - name: Update Homebrew cask
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v')   # only when dispatched from a tag ref
         continue-on-error: true      # needs a HOMEBREW_TAP_TOKEN secret (PAT with repo scope on homebrew-tap)
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
@@ -60,7 +61,7 @@ jobs:
 
   # Mac App Store build: signed .pkg uploaded to App Store Connect.
   app-store:
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.appstore
+    if: inputs.appstore
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
