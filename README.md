@@ -10,7 +10,7 @@ around it — menus, toolbar, Settings, document handling — is standard macOS.
 brew install --cask patbonecrusher/tap/svg-viewer
 ```
 
-or get it from the Mac App Store / the [releases page](https://github.com/patbonecrusher/svg-viewer/releases).
+or from the [Mac App Store](https://apps.apple.com/app/id6812149040), or the [releases page](https://github.com/patbonecrusher/svg-viewer/releases) (notarized zip).
 
 ## Build
 

@@ -141,7 +141,7 @@ def find_app(asc):
     return apps[0]
 
 
-def editable_version(asc, app_id):
+def editable_version(asc, app_id, required=True):
     """The macOS version that can still be edited (Prepare for Submission / Rejected / …)."""
     versions = asc.get(f"/apps/{app_id}/appStoreVersions", **{"filter[platform]": "MAC_OS"})["data"]
     editable = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED",
@@ -149,7 +149,10 @@ def editable_version(asc, app_id):
     for v in versions:
         if v["attributes"]["appStoreState"] in editable:
             return v
-    die("no editable macOS version; create one in App Store Connect first")
+    if not required:
+        return None
+    die("no editable macOS version; create one in App Store Connect first (a released version is read-only — "
+        "add a new version in App Store Connect to edit metadata or submit an update)")
 
 
 def en_localization(asc, version_id):
@@ -172,7 +175,10 @@ def cmd_status(asc):
     for b in asc.get("/builds", **{"filter[app]": app["id"], "sort": "-uploadedDate", "limit": 10})["data"]:
         a = b["attributes"]
         print(f"  {a['version']}  {a['processingState']}  uploaded {a['uploadedDate']}")
-    v = editable_version(asc, app["id"])
+    v = editable_version(asc, app["id"], required=False)
+    if v is None:
+        print("No editable version (the released version is read-only; add a new version to ship an update).")
+        return
     loc = en_localization(asc, v["id"])
     filled = [k for k in ("description", "keywords", "supportUrl", "promotionalText") if loc["attributes"].get(k)]
     print(f"Editable version {v['attributes']['versionString']}: filled {filled or 'nothing'}")
