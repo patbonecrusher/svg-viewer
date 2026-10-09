@@ -45,12 +45,14 @@ LISTING = {
         "No accounts, no tracking, no network access to your files. Open source."
     ),
     "promotionalText": "View SVG files the way they're meant to look — in a lightweight, native Mac app.",
-    "keywords": "svg,vector,viewer,graphics,image,preview,design,export,png,illustration",
+    # "svg"/"viewer" are already in the app name; Apple indexes name+subtitle+keywords as a union,
+    # so repeating them here would waste characters. 97/100 chars.
+    "keywords": "svgz,graphic,image,artwork,icon,logo,illustration,png,export,zoom,transparent,open,file,quicklook",
     "supportUrl": "https://github.com/patbonecrusher/svg-viewer/issues",
     "marketingUrl": "https://patbonecrusher.github.io/svg-viewer/",
     "whatsNew": None,          # not allowed on the first version
 }
-SUBTITLE = "Native SVG viewer"
+SUBTITLE = "Open, zoom, inspect, export"   # 27/30; avoids repeating words already in the name
 PRIVACY_URL = "https://patbonecrusher.github.io/svg-viewer/privacy.html"
 PRIMARY_CATEGORY = "GRAPHICS_AND_DESIGN"
 SECONDARY_CATEGORY = "DEVELOPER_TOOLS"
